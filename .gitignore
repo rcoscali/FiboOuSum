@@ -1,0 +1,17 @@
+# build directories
+/build/
+/build_ninja/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# executables
+/SumOuFibo
+/sum
+/test_sum*
+
+# googletest dependencies
+/_deps/
