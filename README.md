@@ -13,6 +13,22 @@ Ce projet a été généré avec Github Copilot et Claude Haiku 4.5 afin de test
 
 Le modèle GPT-4o a réussit à générer des tests unitaires qui fonctionnent. Mais la vérification de stderr ne montre pas la meme comprehension de ce qu'est une stratégie de test.
 
+```C++
+TEST(CliTest, ErrorMissingArg) {
+    auto r = runCommand("./SumOuFibo");
+    EXPECT_NE(r.exitCode, 0);
+    EXPECT_FALSE(r.err.empty());
+    EXPECT_TRUE(r.err.find("Error: Missing argument") != std::string::npos);
+}
+
+TEST(CliTest, ErrorInvalidNum) {
+    auto r = runCommand("./SumOuFibo abc");
+    EXPECT_NE(r.exitCode, 0);
+    EXPECT_FALSE(r.err.empty());
+    EXPECT_TRUE(r.err.find("Error: Invalid number") != std::string::npos);
+}
+```
+
 ## Structure
 
 ```
