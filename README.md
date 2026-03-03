@@ -77,6 +77,7 @@ Made changes.
 
 Au niveau des tests unitaires, l'utilisation que fait le modèle de HasSubStr permet de vérifier que les messages d'erreur contiennent des éléments clés, sans nécessiter une correspondance exacte. Cela rend les tests plus robustes face à de légères variations dans les messages d'erreur tout en assurant que les informations essentielles sont présentes.
 Cela prouve que le modèle est capable de générer des tests unitaires plus complets et réalistes, en capturant à la fois les codes de retour et les messages d'erreur, ce qui est crucial pour tester une interface en ligne de commande de manière efficace.
+Il a une réelle compréhension de ce qu'est une stratégie de test et comment elle doit être mise en œuvre pour couvrir les différents scénarios d'utilisation et d'erreur.
 
 ## Structure
 
