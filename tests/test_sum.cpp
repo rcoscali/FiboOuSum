@@ -1,31 +1,58 @@
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 #include "sum.h"
 
-// helper to execute a command and capture stdout + exit code
+// helper to execute a command and capture stdout + stderr + exit code
 #include <array>
 #include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <sys/wait.h>
+#include <unistd.h>
+#include <cstring>
 
 struct CmdResult {
     std::string out;
+    std::string err;
     int exitCode;
 };
 
 static CmdResult runCommand(const std::string &cmd) {
+    char tmpfile[] = "/tmp/test_stderr_XXXXXX";
+    int fd = mkstemp(tmpfile);
+    if (fd == -1) return {"", "", -1};
+    close(fd);
+
+    std::string fullCmd = cmd + " 2>" + tmpfile;
+    
     std::array<char, 128> buffer;
-    std::string result;
-    FILE *pipe = popen(cmd.c_str(), "r");
-    if (!pipe) return {"", -1};
+    std::string out;
+    FILE *pipe = popen(fullCmd.c_str(), "r");
+    if (!pipe) {
+        unlink(tmpfile);
+        return {"", "", -1};
+    }
     while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
-        result += buffer.data();
+        out += buffer.data();
     }
     int rc = pclose(pipe);
     int status = -1;
     if (WIFEXITED(rc))
         status = WEXITSTATUS(rc);
-    return {result, status};
+    
+    // Read stderr from tempfile
+    std::string err;
+    FILE *errFile = fopen(tmpfile, "r");
+    if (errFile) {
+        while (fgets(buffer.data(), buffer.size(), errFile) != nullptr) {
+            err += buffer.data();
+        }
+        fclose(errFile);
+        unlink(tmpfile);
+    }
+    
+    return {out, err, status};
 }
 
 TEST(SumTest, BasicCases) {
@@ -59,11 +86,15 @@ TEST(CliTest, FiboOption) {
 TEST(CliTest, ErrorMissingArg) {
     auto r = runCommand("./SumOuFibo");
     EXPECT_NE(r.exitCode, 0);
+    EXPECT_THAT(r.err, ::testing::HasSubstr("Usage:"));
+    EXPECT_THAT(r.err, ::testing::HasSubstr("entier"));
 }
 
 TEST(CliTest, ErrorInvalidNum) {
     auto r = runCommand("./SumOuFibo abc");
     EXPECT_NE(r.exitCode, 0);
+    EXPECT_THAT(r.err, ::testing::HasSubstr("Argument non valide"));
+    EXPECT_THAT(r.err, ::testing::HasSubstr("abc"));
 }
 
 int main(int argc, char **argv) {
