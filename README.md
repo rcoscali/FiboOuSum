@@ -7,6 +7,8 @@ Petit projet en C fournissant deux fonctionnalités :
 
 Le binaire s'appelle `SumOuFibo` et utilise `--sum` si aucune option n'est spécifiée.
 
+### Rationnel
+
 Ce projet a été généré avec Github Copilot et Claude Haiku 4.5 afin de tester la génération de tests unitaire pour l'interface CLI. La totalité du code, du projet cmake et des tests unitaires on été généré avec 3 ou 4 prompt. Le résultat est une fonction runCommand dans google test qui permet de capturer le code de retour et le flux stdout. Un dernier prompt va ajouter la capture de stderr pour vérifier le report d'erreur.
 
 ## Structure
