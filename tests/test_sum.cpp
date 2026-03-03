@@ -7,25 +7,39 @@
 #include <memory>
 #include <string>
 #include <sys/wait.h>
+#include <sstream>
 
 struct CmdResult {
     std::string out;
+    std::string err;
     int exitCode;
 };
 
 static CmdResult runCommand(const std::string &cmd) {
     std::array<char, 128> buffer;
-    std::string result;
-    FILE *pipe = popen(cmd.c_str(), "r");
-    if (!pipe) return {"", -1};
+    std::string resultOut, resultErr;
+    FILE *pipe = popen((cmd + " 2>&1").c_str(), "r");
+    if (!pipe) return {"", "", -1};
     while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
-        result += buffer.data();
+        resultOut += buffer.data();
     }
     int rc = pclose(pipe);
     int status = -1;
     if (WIFEXITED(rc))
         status = WEXITSTATUS(rc);
-    return {result, status};
+
+    // Separate stdout and stderr
+    std::istringstream stream(resultOut);
+    std::string line;
+    while (std::getline(stream, line)) {
+        if (line.find("Error:") == 0) {
+            resultErr += line + "\n";
+        } else {
+            resultOut += line + "\n";
+        }
+    }
+
+    return {resultOut, resultErr, status};
 }
 
 TEST(SumTest, BasicCases) {
@@ -59,11 +73,15 @@ TEST(CliTest, FiboOption) {
 TEST(CliTest, ErrorMissingArg) {
     auto r = runCommand("./SumOuFibo");
     EXPECT_NE(r.exitCode, 0);
+    EXPECT_FALSE(r.err.empty());
+    EXPECT_TRUE(r.err.find("Error: Missing argument") != std::string::npos);
 }
 
 TEST(CliTest, ErrorInvalidNum) {
     auto r = runCommand("./SumOuFibo abc");
     EXPECT_NE(r.exitCode, 0);
+    EXPECT_FALSE(r.err.empty());
+    EXPECT_TRUE(r.err.find("Error: Invalid number") != std::string::npos);
 }
 
 int main(int argc, char **argv) {
